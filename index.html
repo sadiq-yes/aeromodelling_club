@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="description" content="Aeromodelling Club of IIT Indore — Build, Fly, Innovate. RC aircraft, drones, and autonomous systems."/>
+<meta name="theme-color" content="#030712"/>
+<title>AeroClub — IIT Indore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --bg:#030712;--bg2:#0a0f1e;--bg3:#0d1629;
+  --accent:#00d4ff;--accent2:#7c3aed;--accent3:#f59e0b;
+  --text:#e2e8f0;--muted:#64748b;--border:rgba(0,212,255,0.15);
+  --glow:0 0 20px rgba(0,212,255,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden;cursor:none;}
+
+/* CUSTOM CURSOR */
+#cursor{position:fixed;width:12px;height:12px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,opacity .2s;mix-blend-mode:screen;}
+#cursor-ring{position:fixed;width:40px;height:40px;border:1.5px solid rgba(0,212,255,0.5);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:left .12s ease,top .12s ease,width .2s,height .2s;}
+body:hover #cursor{opacity:1;}
+.cursor-hover #cursor{width:20px;height:20px;}
+.cursor-hover #cursor-ring{width:60px;height:60px;border-color:var(--accent);}
+
+/* CANVAS */
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* NAV */
+nav{position:fixed;top:0;width:100%;z-index:100;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;background:rgba(3,7,18,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.logo{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.nav-links{display:flex;gap:2rem;list-style:none;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.85rem;letter-spacing:.05em;text-transform:uppercase;transition:color .3s;}
+.nav-links a:hover{color:var(--accent);}
+.nav-cta{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000 !important;-webkit-text-fill-color:#000 !important;padding:.4rem 1rem;border-radius:4px;font-weight:600 !important;}
+
+/* HAMBURGER for mobile */
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;}
+.hamburger span{display:block;width:22px;height:2px;background:var(--accent);border-radius:2px;transition:all .3s;}
+.mobile-menu{display:none;position:fixed;top:60px;left:0;right:0;background:rgba(3,7,18,0.97);border-bottom:1px solid var(--border);z-index:99;flex-direction:column;padding:1rem 2rem;}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{color:var(--muted);text-decoration:none;padding:.75rem 0;font-size:.9rem;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.05em;transition:color .3s;}
+.mobile-menu a:hover{color:var(--accent);}
+.mobile-menu a:last-child{border-bottom:none;}
+
+/* SECTIONS */
+section{position:relative;z-index:1;}
+.container{max-width:1200px;margin:0 auto;padding:0 2rem;}
+
+/* HERO */
+#hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:6rem 2rem 4rem;}
+.hero-tag{font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);border:1px solid var(--border);display:inline-block;padding:.3rem .8rem;border-radius:2px;margin-bottom:1.5rem;}
+.hero-title{font-family:'Orbitron',sans-serif;font-size:clamp(2.5rem,8vw,6rem);font-weight:900;line-height:1;margin-bottom:1rem;}
+.hero-title .line1{display:block;background:linear-gradient(135deg,#fff,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-title .line2{display:block;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{color:var(--muted);max-width:500px;margin:0 auto 2.5rem;line-height:1.7;font-size:1rem;}
+.hero-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+.btn{padding:.75rem 2rem;border-radius:4px;font-weight:600;font-size:.9rem;cursor:pointer;text-decoration:none;transition:all .3s;display:inline-block;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;border:none;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,212,255,0.4);}
+.btn-outline{background:transparent;color:var(--accent);border:1px solid var(--accent);}
+.btn-outline:hover{background:rgba(0,212,255,0.1);transform:translateY(-2px);}
+.hero-stats{display:flex;gap:3rem;justify-content:center;margin-top:4rem;flex-wrap:wrap;}
+.stat{text-align:center;}
+.stat-num{font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:900;color:var(--accent);}
+.stat-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+.scroll-indicator{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;color:var(--muted);font-size:.75rem;}
+.scroll-line{width:1px;height:40px;background:linear-gradient(var(--accent),transparent);animation:scrollPulse 2s infinite;}
+@keyframes scrollPulse{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* SECTION TITLES */
+.section-header{text-align:center;margin-bottom:4rem;}
+.section-tag{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:.75rem;}
+.section-title{font-family:'Orbitron',sans-serif;font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;margin-bottom:.75rem;}
+.section-desc{color:var(--muted);max-width:500px;margin:0 auto;line-height:1.7;}
+
+/* GLOWING DIVIDER */
+.divider{width:60px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin:1rem auto;}
+
+/* ABOUT */
+#about{padding:8rem 0;}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;}
+.about-text h2{font-family:'Orbitron',sans-serif;font-size:2rem;margin-bottom:1rem;}
+.about-text p{color:var(--muted);line-height:1.8;margin-bottom:1rem;}
+.about-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1.5rem;position:relative;overflow:hidden;}
+.about-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+.about-highlights{display:flex;flex-direction:column;gap:1rem;}
+.highlight{display:flex;align-items:center;gap:1rem;}
+.highlight-icon{width:40px;height:40px;background:rgba(0,212,255,0.1);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.highlight-text h4{font-size:.9rem;font-weight:600;margin-bottom:.2rem;}
+.highlight-text p{font-size:.8rem;color:var(--muted);}
+
+/* MEMBERS */
+#members{padding:8rem 0;}
+.members-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.5rem;}
+.member-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;text-align:center;transition:all .3s;position:relative;overflow:hidden;}
+.member-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,212,255,0.05),rgba(124,58,237,0.05));opacity:0;transition:opacity .3s;}
+.member-card:hover{transform:translateY(-6px);border-color:rgba(0,212,255,0.4);box-shadow:0 20px 40px rgba(0,0,0,.4),var(--glow);}
+.member-card:hover::after{opacity:1;}
+.member-avatar{width:80px;height:80px;border-radius:50%;margin:0 auto 1rem;border:2px solid var(--border);position:relative;overflow:hidden;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.2rem;font-weight:700;color:var(--accent);}
+.member-photo{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.member-name{font-weight:600;font-size:.95rem;margin-bottom:.25rem;text-transform:capitalize;}
+.member-role{font-size:.75rem;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;}
+.member-dept{font-size:.75rem;color:var(--muted);}
+.role-badge{display:inline-block;padding:.2rem .6rem;border-radius:20px;font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-top:.5rem;}
+.badge-lead{background:rgba(245,158,11,0.15);color:var(--accent3);border:1px solid rgba(245,158,11,0.3);}
+.badge-core{background:rgba(0,212,255,0.1);color:var(--accent);border:1px solid var(--border);}
+.badge-member{background:rgba(124,58,237,0.1);color:#a78bfa;border:1px solid rgba(124,58,237,0.2);}
+
+/* PROJECTS */
+#projects{padding:8rem 0;}
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:2rem;}
+.project-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all .3s;}
+.project-card:hover{transform:translateY(-4px);border-color:rgba(0,212,255,0.4);box-shadow:0 20px 40px rgba(0,0,0,.5);}
+.project-img{height:180px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative;overflow:hidden;}
+.project-img-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,212,255,0.1),rgba(124,58,237,0.1));}
+.project-body{padding:1.5rem;}
+.project-status{display:inline-flex;align-items:center;gap:.4rem;padding:.2rem .7rem;border-radius:20px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;}
+.status-ongoing{background:rgba(34,197,94,0.1);color:#4ade80;border:1px solid rgba(34,197,94,0.2);}
+.status-completed{background:rgba(0,212,255,0.1);color:var(--accent);border:1px solid var(--border);}
+.status-planned{background:rgba(245,158,11,0.1);color:var(--accent3);border:1px solid rgba(245,158,11,0.2);}
+.status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+.status-ongoing .status-dot{animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.project-title{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;margin-bottom:.5rem;}
+.project-desc{font-size:.85rem;color:var(--muted);line-height:1.6;margin-bottom:1rem;}
+.project-phase{margin-bottom:1rem;}
+.phase-label{font-size:.75rem;color:var(--muted);margin-bottom:.4rem;display:flex;justify-content:space-between;}
+.phase-bar{height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;}
+.phase-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width 1s ease;}
+.project-outcomes{border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem;}
+.project-outcomes h4{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;}
+.outcome-item{display:flex;align-items:flex-start;gap:.5rem;font-size:.8rem;color:var(--text);margin-bottom:.3rem;}
+.outcome-dot{width:4px;height:4px;background:var(--accent);border-radius:50%;margin-top:.4rem;flex-shrink:0;}
+.project-tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.75rem;}
+.tag{padding:.2rem .5rem;background:rgba(124,58,237,0.1);color:#a78bfa;border:1px solid rgba(124,58,237,0.2);border-radius:3px;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;}
+
+/* ACHIEVEMENTS */
+#achievements{padding:8rem 0;}
+.achievements-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;}
+.achievement-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;transition:all .3s;position:relative;overflow:hidden;}
+.achievement-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.4);}
+.achievement-card.gold{border-color:rgba(245,158,11,0.4);}
+.achievement-card.silver{border-color:rgba(148,163,184,0.4);}
+.achievement-card.bronze{border-color:rgba(205,127,50,0.4);}
+.achievement-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.achievement-card.gold::before{background:linear-gradient(90deg,var(--accent3),#fcd34d);}
+.achievement-card.silver::before{background:linear-gradient(90deg,#94a3b8,#e2e8f0);}
+.achievement-card.bronze::before{background:linear-gradient(90deg,#cd7f32,#d97706);}
+.ach-icon{font-size:2rem;margin-bottom:.75rem;}
+.ach-title{font-weight:600;font-size:.95rem;margin-bottom:.4rem;}
+.ach-event{font-size:.8rem;color:var(--accent);margin-bottom:.25rem;}
+.ach-year{font-size:.75rem;color:var(--muted);}
+.ach-desc{font-size:.8rem;color:var(--muted);margin-top:.5rem;line-height:1.5;}
+
+/* TASKS DASHBOARD */
+#tasks{padding:8rem 0;}
+.tasks-layout{display:grid;grid-template-columns:1fr 350px;gap:2rem;align-items:start;}
+.task-filters{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:2rem;}
+.filter-btn{padding:.35rem .9rem;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.75rem;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;}
+.filter-btn.active,.filter-btn:hover{background:rgba(0,212,255,0.1);color:var(--accent);border-color:var(--accent);}
+.tasks-list{display:flex;flex-direction:column;gap:1rem;}
+.task-item{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:all .3s;}
+.task-item:hover{border-color:rgba(0,212,255,0.3);}
+.task-header{padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;cursor:pointer;user-select:none;}
+.task-num{font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--accent);width:24px;flex-shrink:0;}
+.task-info{flex:1;}
+.task-name{font-weight:600;font-size:.9rem;margin-bottom:.2rem;}
+.task-meta{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;}
+.task-tag-pill{padding:.15rem .5rem;border-radius:3px;font-size:.65rem;font-weight:600;text-transform:uppercase;}
+.task-duration{font-size:.75rem;color:var(--muted);}
+.task-diff{display:flex;gap:2px;flex-shrink:0;}
+.diff-dot{width:6px;height:6px;border-radius:50%;}
+.diff-filled{background:var(--accent);}
+.diff-empty{background:rgba(255,255,255,0.15);}
+.task-toggle{color:var(--muted);font-size:1.2rem;transition:transform .3s;flex-shrink:0;}
+.task-item.open .task-toggle{transform:rotate(180deg);}
+.task-body{max-height:0;overflow:hidden;transition:max-height .4s ease;}
+.task-item.open .task-body{max-height:800px;}
+.task-content{padding:0 1.25rem 1.25rem;}
+.task-desc{font-size:.85rem;color:var(--muted);line-height:1.7;margin-bottom:1rem;}
+.task-deliverables h4{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;}
+.deliverable{display:flex;gap:.5rem;font-size:.82rem;margin-bottom:.3rem;align-items:flex-start;}
+.del-dot{color:var(--accent);margin-top:.1rem;flex-shrink:0;}
+.task-bonus{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:6px;padding:.75rem 1rem;font-size:.82rem;color:#fcd34d;margin-top:.75rem;}
+.task-bonus span{font-weight:600;}
+
+/* SUBMISSION PANEL */
+.submission-panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;position:sticky;top:80px;}
+.panel-title{display:flex;align-items:center;gap:.5rem;margin-bottom:1.25rem;}
+.panel-icon{font-size:1.2rem;}
+.form-group{margin-bottom:1rem;}
+.form-group label{display:block;font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;}
+.form-group input,.form-group select,.form-group textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:.6rem .9rem;color:var(--text);font-family:'Inter',sans-serif;font-size:.85rem;transition:border .2s;outline:none;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);}
+.form-group select option{background:var(--bg2);}
+.form-group textarea{resize:vertical;min-height:80px;}
+.submit-btn{width:100%;padding:.75rem;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:6px;color:#000;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .3s;font-family:'Inter',sans-serif;}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,212,255,0.3);}
+.submissions-list{margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1rem;}
+.submissions-list h4{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;}
+.sub-item{background:var(--bg3);border-radius:6px;padding:.6rem .8rem;margin-bottom:.5rem;font-size:.78rem;}
+.sub-name{font-weight:600;margin-bottom:.15rem;}
+.sub-task{color:var(--accent);font-size:.72rem;}
+.sub-time{color:var(--muted);font-size:.7rem;}
+.success-msg{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:6px;padding:.75rem 1rem;color:#4ade80;font-size:.82rem;margin-top:.75rem;display:none;}
+.success-msg.show{display:block;}
+
+/* FOOTER */
+footer{padding:4rem 0 2rem;border-top:1px solid var(--border);}
+.footer-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2rem;margin-bottom:2rem;}
+.footer-brand .logo{margin-bottom:.75rem;display:block;}
+.footer-brand p{font-size:.82rem;color:var(--muted);line-height:1.6;}
+.footer-col h4{font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.75rem;}
+.footer-col a{display:block;font-size:.82rem;color:var(--muted);text-decoration:none;margin-bottom:.4rem;transition:color .2s;}
+.footer-col a:hover{color:var(--accent);}
+.footer-bottom{text-align:center;font-size:.78rem;color:var(--muted);padding-top:2rem;border-top:1px solid var(--border);}
+
+/* GLOW ORBS */
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;animation:orbFloat 8s ease-in-out infinite;}
+#orb1{width:400px;height:400px;background:rgba(0,212,255,0.06);top:-10%;left:-10%;}
+#orb2{width:500px;height:500px;background:rgba(124,58,237,0.05);bottom:-20%;right:-10%;animation-delay:-4s;}
+@keyframes orbFloat{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,30px)}}
+
+/* FADE IN */
+.fade-in{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease;}
+.fade-in.visible{opacity:1;transform:translateY(0);}
+
+/* TYPEWRITER CURSOR */
+.typewriter::after{content:'|';animation:blink2 .7s infinite;}
+@keyframes blink2{0%,100%{opacity:1}50%{opacity:0}}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--muted);font-size:.9rem;}
+.empty-state .empty-icon{font-size:3rem;margin-bottom:1rem;}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .about-grid,.tasks-layout,.footer-grid{grid-template-columns:1fr;}
+  .submission-panel{position:static;}
+}
+@media(max-width:768px){
+  .nav-links{display:none;}
+  .hamburger{display:flex;}
+  .projects-grid{grid-template-columns:1fr;}
+}
+@media(max-width:600px){
+  nav{padding:.75rem 1.25rem;}
+  .container{padding:0 1.25rem;}
+  .hero-stats{gap:1.5rem;}
+  #about,#members,#projects,#achievements,#tasks{padding:5rem 0;}
+  .footer-grid{grid-template-columns:1fr;}
+  body{cursor:auto;}
+  #cursor,#cursor-ring{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- CUSTOM CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- BG CANVAS -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- GLOW ORBS -->
+<div class="orb" id="orb1"></div>
+<div class="orb" id="orb2"></div>
+
+<!-- NAV -->
+<nav>
+  <span class="logo" id="nav-logo"></span>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#members">Team</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#achievements">Achievements</a></li>
+    <li><a href="#tasks" class="nav-cta">Dashboard</a></li>
+  </ul>
+  <div class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#about" onclick="closeMenu()">About</a>
+  <a href="#members" onclick="closeMenu()">Team</a>
+  <a href="#projects" onclick="closeMenu()">Projects</a>
+  <a href="#achievements" onclick="closeMenu()">Achievements</a>
+  <a href="#tasks" onclick="closeMenu()">Dashboard</a>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div style="position:relative;z-index:1;">
+    <div class="hero-tag" id="hero-tag"></div>
+    <h1 class="hero-title">
+      <span class="line1" id="hero-line1"></span>
+      <span class="line2 typewriter" id="hero-line2"></span>
+    </h1>
+    <p class="hero-sub" id="hero-sub"></p>
+    <div class="hero-btns">
+      <a href="#projects" class="btn btn-primary">Explore Projects</a>
+      <a href="#tasks" class="btn btn-outline">Task Dashboard</a>
+    </div>
+    <div class="hero-stats" id="hero-stats"></div>
+    <div class="scroll-indicator"><div class="scroll-line"></div><span>Scroll</span></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="about-grid fade-in">
+      <div class="about-text">
+        <div class="section-tag" id="about-tag"></div>
+        <h2 id="about-title"></h2>
+        <p id="about-p1"></p>
+        <p id="about-p2"></p>
+        <a href="#members" class="btn btn-outline" style="margin-top:1rem;">Meet the Team →</a>
+      </div>
+      <div class="about-card">
+        <div class="about-highlights" id="about-highlights"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MEMBERS -->
+<section id="members">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-tag">The Team</span>
+      <h2 class="section-title">Club Members</h2>
+      <div class="divider"></div>
+      <p class="section-desc">The brilliant minds behind every flight, every project, every innovation.</p>
+    </div>
+    <div class="members-grid" id="members-grid"></div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-tag">Our Work</span>
+      <h2 class="section-title">Projects</h2>
+      <div class="divider"></div>
+      <p class="section-desc">From concept to flight — tracking every build, sim, and innovation.</p>
+    </div>
+    <div class="projects-grid" id="projects-grid"></div>
+  </div>
+</section>
+
+<!-- ACHIEVEMENTS -->
+<section id="achievements">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-tag">Glory</span>
+      <h2 class="section-title">Achievements</h2>
+      <div class="divider"></div>
+      <p class="section-desc">Competitions won, records set, recognition earned.</p>
+    </div>
+    <div class="achievements-grid" id="achievements-grid"></div>
+  </div>
+</section>
+
+<!-- TASKS DASHBOARD -->
+<section id="tasks">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-tag">Summer 2026</span>
+      <h2 class="section-title">Task Dashboard</h2>
+      <div class="divider"></div>
+      <p class="section-desc">10 tasks across simulation, design, hardware &amp; autonomy. Deadline: 21 August 2026.</p>
+    </div>
+    <div class="tasks-layout">
+      <div>
+        <div class="task-filters" id="task-filters"></div>
+        <div class="tasks-list" id="tasks-list"></div>
+      </div>
+      <div class="submission-panel">
+        <div class="panel-title">
+          <span class="panel-icon">🚀</span>
+          <h3 style="font-family:'Orbitron',sans-serif;font-size:.95rem;">Submit Response</h3>
+        </div>
+        <div class="form-group">
+          <label for="sub-name">Your Name</label>
+          <input type="text" id="sub-name" placeholder="Full name" autocomplete="name"/>
+        </div>
+        <div class="form-group">
+          <label for="sub-roll">Roll Number</label>
+          <input type="text" id="sub-roll" placeholder="e.g. 22BEE0123" autocomplete="off"/>
+        </div>
+        <div class="form-group">
+          <label for="sub-task">Task</label>
+          <select id="sub-task"><option value="">Select a task...</option></select>
+        </div>
+        <div class="form-group">
+          <label for="sub-link">GitHub / Drive Link</label>
+          <input type="url" id="sub-link" placeholder="https://..."/>
+        </div>
+        <div class="form-group">
+          <label for="sub-notes">Notes / Comments</label>
+          <textarea id="sub-notes" placeholder="Briefly describe your approach or any blockers..."></textarea>
+        </div>
+        <button class="submit-btn" onclick="submitResponse()">Submit Response ↗</button>
+        <div class="success-msg" id="success-msg">✅ Submitted! The team leads will review your work.</div>
+        <div class="submissions-list">
+          <h4>Recent Submissions</h4>
+          <div id="submissions-display"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <span class="logo" id="footer-logo"></span>
+        <p id="footer-desc"></p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="#about">About Us</a>
+        <a href="#members">Team</a>
+        <a href="#projects">Projects</a>
+        <a href="#achievements">Achievements</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="#" id="footer-email"></a>
+        <a href="#" id="footer-instagram" target="_blank" rel="noopener">Instagram</a>
+        <a href="#" id="footer-college"></a>
+      </div>
+    </div>
+    <div class="footer-bottom" id="footer-bottom"></div>
+  </div>
+</footer>
+
+<!-- ============================================================
+     ✏️  CLUB DATA — EDIT EVERYTHING HERE
+     ============================================================ -->
+<script id="club-data">
+const CLUB = {
+  name: "Aeromodelling Club",
+  fullName: "Aeromodelling Club",
+  college: "IIT INDORE",
+  tagline: "Build. Fly. Innovate.",
+  heroSub: "We design, build and fly RC aircraft, drones, and autonomous systems. Join us where engineering meets the sky.",
+  email: "aeroclub@iiti.ac.in",
+  instagram: "https://instagram.com/aeroclub_iiti",
+  foundedYear: 2015,
+  stats: [
+    { num: "15+", label: "Members" },
+    { num: "12", label: "Projects" },
+    { num: "2023", label: "Est." }
+  ],
+  about: {
+    tag: "Who We Are",
+    title: "Engineering Meets the Sky",
+    p1: "Aeromodelling Club is IIT Indore's premier technical club dedicated to the art and science of aeromodelling. From hand-launched gliders to GPS-guided autonomous drones, we push the limits of what student engineers can build.",
+    p2: "We participate in national and international competitions, run workshops, and run year-round R&D projects that span aerodynamics, embedded systems, computer vision, and structures.",
+    highlights: [
+      { icon: "✈️", title: "RC Aircraft & Drones", desc: "Fixed wing, multirotors, hybrid VTOL designs" },
+      { icon: "🧠", title: "Autonomy & Controls", desc: "ArduPilot, PX4, custom flight controllers" },
+      { icon: "🔬", title: "Simulation & CFD", desc: "XFLR5, OpenFOAM, 6-DOF flight dynamics" },
+      { icon: "🏆", title: "Competitions", desc: "SAE Aero, Air Cargo Challenge, and more" }
+    ]
+  },
+
+  members: [
+    { name: "Burra Venkata Chakrapani", role: "Club Head", dept: "Space Science & Engineering, 3rd Year", photo: "", badge: "lead" },
+    { name: "K Reddy Mohammed Sadiq", role: "Co-Head", dept: "Mechanical Engineering, 3rd Year", photo: "", badge: "lead" },
+    { name: "Sathwik", role: "Project Lead", dept: "Space Science & Engineering, 3rd Year", photo: "", badge: "lead" },
+    { name: "Sibasish Barik", role: "Ex-Club Lead", dept: "Civil Engineering, 4th Year", photo: "", badge: "lead" },
+    { name: "Kavya", role: "Ex-Co-Head", dept: "Mechanical Engineering, 4th Year", photo: "", badge: "lead" },
+    { name: "Sanyuja", role: "Core Member", dept: "MEMS, 3rd Year", photo: "", badge: "core" },
+    { name: "Member", role: "Core Member", dept: "Mechanical, 2nd Year", photo: "", badge: "core" },
+    { name: "Member", role: "Core Member", dept: "CSE, 2nd Year", photo: "", badge: "core" },
+    { name: "Member", role: "Member", dept: "EEE, 1st Year", photo: "", badge: "member" },
+    { name: "Member", role: "Member", dept: "Mechanical, 1st Year", photo: "", badge: "member" },
+    { name: "Member", role: "Member", dept: "ECE, 1st Year", photo: "", badge: "member" },
+    { name: "Member", role: "Member", dept: "Aerospace, 2nd Year", photo: "", badge: "member" }
+  ],
+
+  projects: [
+    {
+      name: "Autonomous Cargo Plane",
+      emoji: "✈️",
+      status: "ongoing",
+      phase: 65,
+      phaseLabel: "Phase 3 / 5 — Flight Testing",
+      desc: "Fixed-wing autonomous aircraft designed for SAE Aero Design 2025. 2.4 m wingspan, ArduPlane, 2 kg payload capacity.",
+      outcomes: ["Successfully completed 3 autonomous waypoint missions in SITL", "Wing structure passed 4g load factor bench test", "Motor+prop selection finalised: 580 g thrust at 50% throttle"],
+      tags: ["ArduPlane", "XFLR5", "Balsa+CF", "FPV"]
+    },
+    {
+      name: "FPV Racing Quad",
+      emoji: "🚁",
+      status: "completed",
+      phase: 100,
+      phaseLabel: "Completed",
+      desc: "5-inch freestyle FPV quadrotor tuned for Betaflight. Carbon fibre frame, F7 FC, 2306 motors.",
+      outcomes: ["Sub-5ms latency FPV video link achieved", "Lap times under 30s on the campus track", "PID tuning guide published for club members"],
+      tags: ["Betaflight", "FPV", "Carbon Frame"]
+    },
+    {
+      name: "VTOL Tiltrotor UAV",
+      emoji: "🛸",
+      status: "ongoing",
+      phase: 30,
+      phaseLabel: "Phase 2 / 5 — CAD & Simulation",
+      desc: "Hybrid VTOL with tilting nacelles — vertical takeoff + efficient cruise. ArduPlane QuadPlane firmware.",
+      outcomes: ["Tiltrotor mechanism CAD finalised in Fusion 360", "XFLR5 wing analysis complete — NACA 4415 selected"],
+      tags: ["VTOL", "QuadPlane", "Fusion360", "XFLR5"]
+    },
+    {
+      name: "Computer Vision Landing",
+      emoji: "👁️",
+      status: "ongoing",
+      phase: 50,
+      phaseLabel: "Phase 3 / 5 — Model Training",
+      desc: "YOLOv8-nano on Raspberry Pi 4 for autonomous landing pad detection and visual servo approach.",
+      outcomes: ["Dataset of 800 labelled images collected on Roboflow", "Model running at 14 FPS on RPi4 — 87% mAP on test set"],
+      tags: ["YOLOv8", "RPi4", "OpenCV", "MAVLink"]
+    },
+    {
+      name: "6-DOF Flight Sim",
+      emoji: "💻",
+      status: "completed",
+      phase: 100,
+      phaseLabel: "Completed",
+      desc: "Python 6-DOF rigid-body flight dynamics simulator for club training. Uses Cessna 172 aerodynamic derivatives.",
+      outcomes: ["Short-period mode natural frequency within 5% of textbook", "Interactive 3D trajectory visualiser built in Matplotlib", "Used in 2 club workshops — 20 members trained"],
+      tags: ["Python", "NumPy", "SciPy", "6-DOF"]
+    },
+    {
+      name: "Airfoil Wind Tunnel",
+      emoji: "🌬️",
+      status: "planned",
+      phase: 10,
+      phaseLabel: "Phase 1 / 5 — Concept & Budget",
+      desc: "Low-speed open-circuit wind tunnel for airfoil testing. Target: 15 m/s, test section 300×300 mm.",
+      outcomes: ["Initial concept and budget approved by faculty advisor"],
+      tags: ["Hardware", "Structures", "CAD"]
+    }
+  ],
+
+  achievements: [
+    { icon: "🎖️", title: "Finalist — e-Yantra Robotics 2022", event: "IIT Bombay e-Yantra", year: "2022", tier: "silver", desc: "Reached national finals in the Autonomous UAV theme." }
+  ],
+
+  tasks: [
+    { id:1, tag:"Simulation", title:"Airfoil Analysis & CFD Simulation", duration:"2–3 weeks", difficulty:3,
+      desc:"Select any NACA 4-digit airfoil (e.g. NACA 2412). Analyse CL, CD, CM across −5° to 20° AoA in XFLR5. Validate with 2D CFD in SimScale/OpenFOAM. Plot CL vs α and CL/CD vs α. Identify stall angle.",
+      deliverables:["XFLR5 project file + polar data","CFD mesh screenshots & convergence plots","CL vs α comparative graphs (XFLR5 vs CFD)","Technical PDF report with conclusions"],
+      bonus:"Run at Re=100k and Re=500k and compare — explain the Reynolds number effect." },
+    { id:2, tag:"Design", title:"Complete Fixed-Wing RC Plane Design", duration:"3–4 weeks", difficulty:4,
+      desc:"Design a fixed-wing RC trainer (1.2 m wingspan, ~800 g AUW) using eCalc for propulsion sizing, XFLR5 for wing planform, and Fusion 360 / FreeCAD for full CAD model. Include CG and static margin analysis.",
+      deliverables:["Full CAD files (STEP/native)","eCalc component selection sheet","XFLR5 wing polar + stability report","CG & static margin calculation","Build plan / exploded view"],
+      bonus:"Generate a DXF cutting file for wing ribs suitable for laser cutting from 3 mm balsa." },
+    { id:3, tag:"Hardware", title:"PID Controller Build & Tuning (1-DOF Rig)", duration:"2–3 weeks", difficulty:4,
+      desc:"Build a 1-DOF reaction-wheel or propeller-balancing rig with Arduino/ESP32 + MPU-6050 + brushless motor. Implement PID in C++. Tune using Ziegler–Nichols. Log step response. Plot ≥4 PID gain configurations.",
+      deliverables:["Source code (GitHub repo)","Circuit diagram / schematic","Step-response plots (≥4 configs)","Video of rig balancing (30–60 s)","Tuning methodology report"],
+      bonus:"Implement a Kalman filter instead of complementary filter and compare noise floor." },
+    { id:4, tag:"Autonomy", title:"Autonomous Waypoint Mission (ArduPlane SITL)", duration:"3 weeks", difficulty:4,
+      desc:"Use Mission Planner + ArduPlane SITL to plan and execute a multi-waypoint autonomous mission. Understand AUTO, LOITER, RTL modes. Configure airspeed hold, geofence, failsafe. If hardware available, fly ≥1 AUTO leg.",
+      deliverables:["SITL mission log (.tlog/.bin)","Mission Planner waypoint plan + KML export","Key parameter list (changed + reason)","Report: L1 controller vs pure pursuit","Flight video (if hardware flight done)"],
+      bonus:"Write a Python DroneKit script to command a GUIDED mode mission programmatically." },
+    { id:5, tag:"Hardware", title:"Propulsion Bench Testing & Efficiency Mapping", duration:"2 weeks", difficulty:3,
+      desc:"Build a thrust stand with load cell + power meter + tachometer. Test ≥2 motor+prop combos at 10–100% throttle. Record thrust, power, RPM, current. Calculate g/W efficiency. Find optimal operating points.",
+      deliverables:["Raw data spreadsheet (CSV/Excel)","Thrust vs throttle curves","g/W efficiency plots","Written analysis: which combo suits trainer vs racer"],
+      bonus:"Use a real flight log to estimate average cruise power and predict endurance for a given battery." },
+    { id:6, tag:"Simulation", title:"6-DOF Flight Dynamics Simulation (Python)", duration:"3 weeks", difficulty:5,
+      desc:"Implement a 6-DOF rigid-body flight dynamics model in Python (NumPy/SciPy). 12 state variables. Use Cessna 172 aero derivatives. Simulate elevator step input. Plot short-period and phugoid modes. 3D trajectory in Matplotlib.",
+      deliverables:["Python source code (GitHub repo)","3D trajectory plot of ≥1 manoeuvre","Simulated vs textbook short-period frequency","Report on each state variable + EOM"],
+      bonus:"Add a proportional pitch controller that stabilises to trim condition after disturbance." },
+    { id:7, tag:"Design", title:"FDM 3D-Printed Functional RC Component", duration:"2–3 weeks", difficulty:3,
+      desc:"Design and 3D print a functional RC component: servo horn+linkage, custom motor mount, FPV mount with TPU vibration damping, or battery tray with locking rail. Tolerance for FDM (0.2–0.3 mm clearance). FEA stress check before printing.",
+      deliverables:["CAD source + STL","FEA stress plot with loading scenario","Print settings used","Photos of printed part (installed if possible)","Design rationale document"],
+      bonus:"Print same component in two orientations. Compare pull-out force with a luggage scale." },
+    { id:8, tag:"Autonomy", title:"Computer Vision Object Detection on Drone Feed", duration:"3–4 weeks", difficulty:4,
+      desc:"Set up RPi4 / Jetson Nano + camera. Run YOLOv8-nano for real-time object detection of a target (landing pad, cone, person). Stream video with bounding boxes via UDP. Demo at ≥10 FPS. Report latency budget.",
+      deliverables:["GitHub repo with code + requirements.txt","Demo video: ≥10 FPS on target hardware","Precision & recall on ≥50 image test set","Setup guide (10 steps)","Latency budget analysis report"],
+      bonus:"Implement a PID visual-servo loop: output yaw/pitch correction signal from frame-center error." },
+    { id:9, tag:"Structures", title:"Wing Spar Design Under Lift Loads", duration:"2 weeks", difficulty:3,
+      desc:"Model the wing as a cantilever beam. Assume elliptical lift distribution. Calculate BMD and SFD for 3g load factor. Size spar in balsa / CF / aluminium (SF 1.5). Verify in SimScale/ANSYS FEA. Optionally build and test to failure.",
+      deliverables:["Hand-calculated BMD and SFD","Spar sizing spreadsheet (Excel/Python)","FEA model screenshots + von Mises plot","Material comparison table (balsa vs CF vs Al)","Report with chosen spar design rationale"],
+      bonus:"Use topology optimisation in Fusion 360 to generate a weight-efficient rib. Compare mass to hand-sized spar." },
+    { id:10, tag:"Content", title:"Technology Deep-Dive Report & Infographic", duration:"1.5–2 weeks", difficulty:2,
+      desc:"Choose: (a) eVTOL & UAM, (b) Electric propulsion & battery trends, (c) Sense-and-avoid for BVLOS UAVs, or (d) Morphing wing structures. Write ≥2000 word technical report + 12-slide Instagram/LinkedIn carousel (1080×1350 px).",
+      deliverables:["Technical report PDF (≥2000 words, with references)","12-slide carousel (PNG 1080×1350 px)","Source list (≥8 credible sources)"],
+      bonus:"Record a 5-min explainer video and share as unlisted YouTube link." }
+  ]
+};
+</script>
+
+<script>
+/* ============================================================
+   RENDER ENGINE
+   ============================================================ */
+
+// Mobile menu
+function toggleMenu(){
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+function closeMenu(){
+  document.getElementById('mobile-menu').classList.remove('open');
+}
+// Close on outside click
+document.addEventListener('click', function(e){
+  const menu = document.getElementById('mobile-menu');
+  const hamburger = document.getElementById('hamburger');
+  if(menu.classList.contains('open') && !menu.contains(e.target) && !hamburger.contains(e.target)){
+    menu.classList.remove('open');
+  }
+});
+
+// Custom cursor (desktop only)
+const cursor = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+if(window.matchMedia('(pointer:fine)').matches){
+  document.addEventListener('mousemove',function(e){
+    mx=e.clientX; my=e.clientY;
+    cursor.style.left=mx+'px';
+    cursor.style.top=my+'px';
+  });
+  setInterval(function(){
+    rx+=(mx-rx)*0.12;
+    ry+=(my-ry)*0.12;
+    cursorRing.style.left=rx+'px';
+    cursorRing.style.top=ry+'px';
+  },16);
+  document.querySelectorAll('a,button,.member-card,.project-card,.task-header,.filter-btn,.achievement-card').forEach(function(el){
+    el.addEventListener('mouseenter',function(){document.body.classList.add('cursor-hover');});
+    el.addEventListener('mouseleave',function(){document.body.classList.remove('cursor-hover');});
+  });
+}
+
+// Three.js particle field
+(function(){
+  try{
+    const canvas = document.getElementById('bg-canvas');
+    const renderer = new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+    camera.position.z=5;
+    const geo = new THREE.BufferGeometry();
+    const N=1800;
+    const pos=new Float32Array(N*3);
+    const vel=new Float32Array(N*3);
+    for(let i=0;i<N;i++){
+      pos[i*3]=(Math.random()-0.5)*20;
+      pos[i*3+1]=(Math.random()-0.5)*20;
+      pos[i*3+2]=(Math.random()-0.5)*10;
+      vel[i*3]=(Math.random()-.5)*.003;
+      vel[i*3+1]=(Math.random()-.5)*.003;
+      vel[i*3+2]=0;
+    }
+    geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    const mat = new THREE.PointsMaterial({color:0x00d4ff,size:.04,transparent:true,opacity:.6});
+    const points = new THREE.Points(geo,mat);
+    scene.add(points);
+    let mouseX=0,mouseY=0;
+    document.addEventListener('mousemove',function(e){
+      mouseX=(e.clientX/window.innerWidth-.5)*2;
+      mouseY=-(e.clientY/window.innerHeight-.5)*2;
+    });
+    function animate(){
+      requestAnimationFrame(animate);
+      const arr=geo.attributes.position.array;
+      for(let i=0;i<N;i++){
+        arr[i*3]+=vel[i*3];
+        arr[i*3+1]+=vel[i*3+1];
+        if(arr[i*3]>10)arr[i*3]=-10;
+        if(arr[i*3]<-10)arr[i*3]=10;
+        if(arr[i*3+1]>10)arr[i*3+1]=-10;
+        if(arr[i*3+1]<-10)arr[i*3+1]=10;
+      }
+      geo.attributes.position.needsUpdate=true;
+      points.rotation.y+=0.0003+mouseX*.0005;
+      points.rotation.x+=0.0002+mouseY*.0002;
+      renderer.render(scene,camera);
+    }
+    animate();
+    window.addEventListener('resize',function(){
+      camera.aspect=window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth,window.innerHeight);
+    });
+  }catch(err){
+    console.warn('Three.js particle field failed to load:',err);
+  }
+})();
+
+// Utility: safe text
+function esc(str){ return String(str||''); }
+
+// Populate nav & footer
+document.getElementById('nav-logo').textContent=CLUB.name;
+document.getElementById('footer-logo').textContent=CLUB.name;
+document.getElementById('footer-desc').textContent='The aeromodelling club of '+CLUB.college+'. Building the future, one flight at a time.';
+document.getElementById('footer-email').textContent=CLUB.email;
+document.getElementById('footer-email').href='mailto:'+CLUB.email;
+document.getElementById('footer-instagram').href=CLUB.instagram;
+document.getElementById('footer-college').textContent=CLUB.college;
+document.getElementById('footer-bottom').textContent='© '+new Date().getFullYear()+' '+CLUB.fullName+', '+CLUB.college+'. All rights reserved.';
+
+// Hero
+document.getElementById('hero-tag').textContent=CLUB.college+' · '+CLUB.fullName;
+document.getElementById('hero-line1').textContent=CLUB.name;
+
+// Typewriter
+const words=['Build. Fly.','Innovate.','Automate.','Dominate.'];
+let wi=0,ci=0,del=false;
+function typewrite(){
+  const el=document.getElementById('hero-line2');
+  if(!el) return;
+  const w=words[wi];
+  if(!del){
+    el.textContent=w.slice(0,ci+1);
+    ci++;
+    if(ci===w.length){del=true;setTimeout(typewrite,1500);return;}
+  }else{
+    el.textContent=w.slice(0,ci-1);
+    ci--;
+    if(ci===0){del=false;wi=(wi+1)%words.length;}
+  }
+  setTimeout(typewrite,del?80:120);
+}
+typewrite();
+document.getElementById('hero-sub').textContent=CLUB.heroSub;
+
+// Stats
+const statsEl=document.getElementById('hero-stats');
+CLUB.stats.forEach(function(s){
+  statsEl.innerHTML+=`<div class="stat"><div class="stat-num">${esc(s.num)}</div><div class="stat-label">${esc(s.label)}</div></div>`;
+});
+
+// About
+document.getElementById('about-tag').textContent=CLUB.about.tag;
+document.getElementById('about-title').textContent=CLUB.about.title;
+document.getElementById('about-p1').textContent=CLUB.about.p1;
+document.getElementById('about-p2').textContent=CLUB.about.p2;
+const hlEl=document.getElementById('about-highlights');
+CLUB.about.highlights.forEach(function(h){
+  hlEl.innerHTML+=`<div class="highlight"><div class="highlight-icon">${h.icon}</div><div class="highlight-text"><h4>${esc(h.title)}</h4><p>${esc(h.desc)}</p></div></div>`;
+});
+
+// Members
+const mgEl=document.getElementById('members-grid');
+CLUB.members.forEach(function(m){
+  const initials=m.name.split(' ').map(function(n){return n[0]||'';}).join('').toUpperCase().slice(0,2);
+  const badgeClass={'lead':'badge-lead','core':'badge-core','member':'badge-member'}[m.badge]||'badge-member';
+  const badgeLabel={'lead':'Lead','core':'Core','member':'Member'}[m.badge]||'Member';
+  let avatar='';
+  if(m.photo){
+    // Convert Google Drive share links to direct embed links
+    let src=m.photo;
+    const gdMatch=src.match(/\/file\/d\/([^/]+)/);
+    if(gdMatch) src='https://drive.google.com/uc?export=view&id='+gdMatch[1];
+    avatar=`<img src="${src}" class="member-photo" alt="${esc(m.name)}" loading="lazy" onerror="this.style.display='none';"/>`;
+  } else {
+    avatar=`<span>${initials}</span>`;
+  }
+  mgEl.innerHTML+=`<div class="member-card fade-in">
+    <div class="member-avatar">${avatar}</div>
+    <div class="member-name">${esc(m.name)}</div>
+    <div class="member-role">${esc(m.role)}</div>
+    <div class="member-dept">${esc(m.dept)}</div>
+    <span class="role-badge ${badgeClass}">${badgeLabel}</span>
+  </div>`;
+});
+
+// Projects
+const pgEl=document.getElementById('projects-grid');
+CLUB.projects.forEach(function(p){
+  const sClass={'ongoing':'status-ongoing','completed':'status-completed','planned':'status-planned'}[p.status]||'status-planned';
+  const sLabel={'ongoing':'Ongoing','completed':'Completed','planned':'Planned'}[p.status]||'Planned';
+  const outcomes=p.outcomes.map(function(o){return `<div class="outcome-item"><div class="outcome-dot"></div><span>${esc(o)}</span></div>`;}).join('');
+  const tags=p.tags.map(function(t){return `<span class="tag">${esc(t)}</span>`;}).join('');
+  pgEl.innerHTML+=`<div class="project-card fade-in">
+    <div class="project-img">${p.emoji}<div class="project-img-overlay"></div></div>
+    <div class="project-body">
+      <span class="project-status ${sClass}"><span class="status-dot"></span>${sLabel}</span>
+      <h3 class="project-title">${esc(p.name)}</h3>
+      <p class="project-desc">${esc(p.desc)}</p>
+      <div class="project-phase">
+        <div class="phase-label"><span>${esc(p.phaseLabel)}</span><span>${p.phase}%</span></div>
+        <div class="phase-bar"><div class="phase-fill" style="width:${p.phase}%"></div></div>
+      </div>
+      <div class="project-outcomes"><h4>Outcomes</h4>${outcomes}</div>
+      <div class="project-tags">${tags}</div>
+    </div>
+  </div>`;
+});
+
+// Achievements
+const agEl=document.getElementById('achievements-grid');
+if(CLUB.achievements.length === 0){
+  agEl.innerHTML='<div class="empty-state"><div class="empty-icon">🏆</div><p>Achievements coming soon — watch this space!</p></div>';
+} else {
+  CLUB.achievements.forEach(function(a){
+    agEl.innerHTML+=`<div class="achievement-card ${esc(a.tier)} fade-in">
+      <div class="ach-icon">${a.icon}</div>
+      <div class="ach-title">${esc(a.title)}</div>
+      <div class="ach-event">${esc(a.event)}</div>
+      <div class="ach-year">${esc(a.year)}</div>
+      <p class="ach-desc">${esc(a.desc)}</p>
+    </div>`;
+  });
+}
+
+// Tasks
+const tagColors2={
+  'Simulation':'#00d4ff','Design':'#4ade80','Hardware':'#f59e0b',
+  'Autonomy':'#a78bfa','Structures':'#fb7185','Content':'#34d399'
+};
+const tagBg={
+  'Simulation':'rgba(0,212,255,0.1)','Design':'rgba(74,222,128,0.1)','Hardware':'rgba(245,158,11,0.1)',
+  'Autonomy':'rgba(167,139,250,0.1)','Structures':'rgba(251,113,133,0.1)','Content':'rgba(52,211,153,0.1)'
+};
+
+const uniqueTags=[...new Set(CLUB.tasks.map(function(t){return t.tag;}))];
+const filtersEl=document.getElementById('task-filters');
+filtersEl.innerHTML='<button class="filter-btn active" data-tag="All">All</button>';
+uniqueTags.forEach(function(t){
+  filtersEl.innerHTML+=`<button class="filter-btn" data-tag="${esc(t)}">${esc(t)}</button>`;
+});
+
+// Populate task select dropdown
+const subTaskSel=document.getElementById('sub-task');
+CLUB.tasks.forEach(function(t){
+  const opt=document.createElement('option');
+  opt.value='Task '+t.id+': '+t.title;
+  opt.textContent='Task '+t.id+': '+t.title;
+  subTaskSel.appendChild(opt);
+});
+
+function renderTasks(filter){
+  const list=document.getElementById('tasks-list');
+  list.innerHTML='';
+  const filtered=filter==='All'?CLUB.tasks:CLUB.tasks.filter(function(t){return t.tag===filter;});
+  if(filtered.length===0){
+    list.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No tasks in this category.</p></div>';
+    return;
+  }
+  filtered.forEach(function(t){
+    const dots=Array.from({length:5},function(_,i){
+      return `<div class="diff-dot ${i<t.difficulty?'diff-filled':'diff-empty'}"></div>`;
+    }).join('');
+    const delivs=t.deliverables.map(function(d){
+      return `<div class="deliverable"><span class="del-dot">▸</span><span>${esc(d)}</span></div>`;
+    }).join('');
+    const bonus=t.bonus?`<div class="task-bonus"><span>⭐ Bonus: </span>${esc(t.bonus)}</div>`:'';
+    const c=tagColors2[t.tag]||'#00d4ff';
+    const bg=tagBg[t.tag]||'rgba(0,212,255,0.1)';
+    list.innerHTML+=`<div class="task-item" id="task-${t.id}">
+      <div class="task-header" onclick="toggleTask(${t.id})" role="button" aria-expanded="false" tabindex="0">
+        <span class="task-num">T${String(t.id).padStart(2,'0')}</span>
+        <div class="task-info">
+          <div class="task-name">${esc(t.title)}</div>
+          <div class="task-meta">
+            <span class="task-tag-pill" style="background:${bg};color:${c};border:1px solid ${c}33">${esc(t.tag)}</span>
+            <span class="task-duration">⏱ ${esc(t.duration)}</span>
+          </div>
+        </div>
+        <div class="task-diff">${dots}</div>
+        <span class="task-toggle">▼</span>
+      </div>
+      <div class="task-body">
+        <div class="task-content">
+          <p class="task-desc">${esc(t.desc)}</p>
+          <div class="task-deliverables"><h4>Deliverables</h4>${delivs}</div>
+          ${bonus}
+        </div>
+      </div>
+    </div>`;
+  });
+  // Re-attach cursor hover listeners for dynamically added elements
+  if(window.matchMedia('(pointer:fine)').matches){
+    document.querySelectorAll('.task-header,.filter-btn').forEach(function(el){
+      el.addEventListener('mouseenter',function(){document.body.classList.add('cursor-hover');});
+      el.addEventListener('mouseleave',function(){document.body.classList.remove('cursor-hover');});
+    });
+  }
+}
+renderTasks('All');
+
+document.getElementById('task-filters').addEventListener('click',function(e){
+  const btn=e.target.closest('.filter-btn');
+  if(btn){
+    document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    renderTasks(btn.dataset.tag);
+  }
+});
+
+// Keyboard support for task headers
+document.getElementById('tasks-list').addEventListener('keydown',function(e){
+  if(e.key==='Enter'||e.key===' '){
+    const header=e.target.closest('.task-header');
+    if(header){e.preventDefault();header.click();}
+  }
+});
+
+function toggleTask(id){
+  const el=document.getElementById('task-'+id);
+  if(!el) return;
+  const isOpen=el.classList.contains('open');
+  el.classList.toggle('open');
+  const header=el.querySelector('.task-header');
+  if(header) header.setAttribute('aria-expanded',String(!isOpen));
+}
+
+// Submission
+let submissions=[];
+function submitResponse(){
+  const n=document.getElementById('sub-name').value.trim();
+  const r=document.getElementById('sub-roll').value.trim();
+  const t=document.getElementById('sub-task').value;
+  const l=document.getElementById('sub-link').value.trim();
+  if(!n||!r||!t){alert('Please fill in Name, Roll Number and Task.');return;}
+  const s={name:n,roll:r,task:t,link:l,time:new Date().toLocaleTimeString()};
+  submissions.unshift(s);
+  renderSubmissions();
+  document.getElementById('sub-name').value='';
+  document.getElementById('sub-roll').value='';
+  document.getElementById('sub-task').value='';
+  document.getElementById('sub-link').value='';
+  document.getElementById('sub-notes').value='';
+  const msg=document.getElementById('success-msg');
+  msg.classList.add('show');
+  setTimeout(function(){msg.classList.remove('show');},4000);
+}
+
+function renderSubmissions(){
+  const el=document.getElementById('submissions-display');
+  if(!submissions.length){
+    el.innerHTML='<div style="font-size:.78rem;color:var(--muted)">No submissions yet.</div>';
+    return;
+  }
+  el.innerHTML=submissions.slice(0,5).map(function(s){
+    return `<div class="sub-item"><div class="sub-name">${esc(s.name)} <span style="color:var(--muted);font-weight:400">(${esc(s.roll)})</span></div><div class="sub-task">${esc(s.task)}</div><div class="sub-time">${esc(s.time)}</div></div>`;
+  }).join('');
+}
+renderSubmissions();
+
+// Intersection Observer for fade-in
+const io=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:.1});
+
+function observeAll(){
+  document.querySelectorAll('.fade-in').forEach(function(el){io.observe(el);});
+}
+observeAll();
+setTimeout(observeAll,500);
+setTimeout(observeAll,1200);
+</script>
+</body>
+</html>
